@@ -1,0 +1,133 @@
+@import "./fontawesome/less/solid";
+@import "./fontawesome/less/brands";
+body{
+    background-color:antiquewhite;
+
+}
+*{
+    margin:0;
+    padding:0;
+}
+nav{
+    font-family: "Ubuntu","sans-serif";
+
+}
+nav ul{
+    display:flex;
+    align-items:center;
+    list-style-type:none;
+    height:65px;
+    background-color: black;
+    color:white;
+}
+.navb{
+    margin-left: 15px;
+}
+.brand img{
+    width:57px;
+    height:63px;
+    margin-left:5px;
+    padding:0 12px;
+}
+.brand{
+    display: flex;
+    align-items:center;
+    font-weight:bolder;
+    font: size 1.4em;
+}
+
+.bottom{
+    position:sticky;
+    height:100%;
+    background-color: black;
+    bottom:0;
+    display:flex;
+    justify-content: center;
+    color:white;
+    flex-direction:column;
+    /* margin:12px 0; */
+    
+}
+.icons{
+    margin-top:14px;
+    margin-left: 50%;
+    margin-bottom: 10px;
+   
+}
+.container{
+    min-height: 65vh;
+    background-color: black;
+    color:white;
+    font-family: 'Courier New',' Courier', 'monospace';
+    display:flex;
+    margin:23px auto;
+    width:70%;
+    border-radius:12px;
+    padding:24px;
+    background-image: url('logo3.jpg');
+
+}
+
+#myprogressbar{
+    width:80vw;
+    text-align: center;
+}
+.songitemcontainer{
+    margin-top:24px;
+
+}
+.songitem{
+    height:60px;
+    display:flex;
+    background-color:white;
+    width:80px;
+    color:white;
+    margin:12x 0;
+    position:absolute;
+    left:15%; 
+    top:20%;
+    align-items: center;
+    justify-content:space-between;
+    /* margin-right:24%; */
+    margin-top: 50px;
+    /* margin-right: 500%; */
+    border-radius: 34px;
+
+    
+}
+.songItem span timestamp{
+    position: absolute;
+    top:10%;
+}
+.songItem span{
+    display: inline;
+}
+
+.songItem img{
+    width: 63px;
+    height:60px;
+    margin:20px 23px;
+    top:5px;
+    margin-bottom: 40x;
+    border-radius:12px;
+
+}
+.timestamp{
+    margin:0 23px;
+    
+}
+
+.timestamp i{
+    cursor:pointer;
+}
+
+.songinfo{
+   position:relative;
+   left:10px;
+   
+ 
+}
+.songinfo img{
+ opacity:0;
+ transition:opacity 1s ease;
+}
