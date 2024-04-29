@@ -1,0 +1,98 @@
+# import requests module
+from cmath import log
+import requests
+import json
+from bs4 import BeautifulSoup 
+
+# Making a GET request to get the data from the url
+# response = requests.get("https://reqres.in/api/users?page=2")
+api_endpoint = "https://reqres.in/api/users"
+response = requests.get(api_endpoint)
+
+# print(response.json())
+#----------------get single user---------------------------------
+get_one = requests.get(url = api_endpoint + "/6")
+print("the single user get one-----",get_one)
+print(get_one.json())
+
+
+#-------------login user --------------------------------
+data = {
+    "email": "eve.holt@reqres.in",
+    "password": "cityslicka"
+}
+logged_in = requests.get(url = api_endpoint + "/login",data=data)
+print("login user----",logged_in)
+print(logged_in.json())
+
+#--------------------------register successfully----------------
+# data={
+#     "email": "eve.holt@reqres.in",
+#     "password": "pistol"
+# }
+# register = requests.post(url = api_endpoint + "/register",data=data)
+# print("register the users data------",register)
+# print(register.json()) 
+
+#----------------if not Beautify the content -----------------
+# soup = BeautifulSoup(response.content,'html.parser')
+# context = soup.prettify()
+# print("The prettify content from beautiful soup ------",context)
+
+
+#-----------------POST method to add one more data------------
+# data ={
+#             "id": 13,
+#             "email": "webkul.services@gmail.com",
+#             "first_name": "Webkul",
+#             "last_name": "Services",
+#             "avatar": "https://reqres.in/img/faces/10-image.jpg"
+#         }
+# add = requests.post(url = api_endpoint+"/post",data=data)
+# if add:
+#     print("The added data using post method 'SUCCESSFULLY' ========",add)
+#     # pastebin_url = add.text
+#     print(" ''''======================='''' ",add.content)
+    
+# else:
+#     print("the post method returns none")
+
+#----------------PUT method  to Update data----------------------
+# data ={
+#             "id": 8,
+#             "email": "webkul.services@gmail.com",
+#             "first_name": "WEBKUL SERVICES",
+#             "last_name": "Services",
+#             "avatar": "https://reqres.in/img/faces/10-image.jpg"
+#         }
+
+# update = requests.put(url = api_endpoint+"/put",data =data )
+# if update:
+#     print(update)
+#     print("The updated data using post method 'SUCCESSFULLY'-----",update.content)
+# else:
+#     print("NOT UPDATED==",update)
+
+
+
+#------------------DELETE method to delete data----------------
+# data ={
+#             "id": 13,
+#             # "email": "webkul.services@gmail.com",
+#             # "first_name": "Webkul",
+#             # "last_name": "Services",
+#             # "avatar": "https://reqres.in/img/faces/10-image.jpg"
+#         }
+
+# remove = requests.delete(url = api_endpoint+'/7')
+
+# if remove:
+#     print("The deleted data using delete method 'deleted SUCCESSFULLY' ",remove)
+#     print("the method remove---------",remove.content)
+# else:
+#     print("Not deleted successfully!")
+
+
+# print(response.json())
+
+  

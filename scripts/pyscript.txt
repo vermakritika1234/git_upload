@@ -1,0 +1,168 @@
+url = "http://192.168.5.36:8015"
+db = "sale_note_1"
+username = 'admin'
+password = 'admin'
+
+import xmlrpc.client
+
+common = xmlrpc.client.ServerProxy('{}/xmlrpc/2/common'.format(url))
+version = common.version()
+print('common version---',version)
+
+#USER AUTHENTICATION---
+uid = common.authenticate(db,username,password,{})
+print("USER ID--------=",uid)
+
+#OBJECT FORMAT------------
+models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(url))
+
+#------------------------Now we are ready to execute are queries---------------
+
+
+#=========================( CREATE ) method to create new product===========================
+def product_create():
+    # global pdt_create    
+    pdt_create = models.execute_kw(db,uid,password,'product.template','create',[{'name':'Webkul Product FF1','detailed_type':'product','invoice_policy':'delivery','list_price':200.0}],{})
+    print("Product ID--------=",pdt_create)
+    return pdt_create   
+   
+
+#=========================(SEARCH) method to search product.product ==========================
+def product_search(pdt_create):
+    # global search_pdt
+    search_pdt = models.execute_kw(db,uid,password,'product.product', 'search',[[['product_tmpl_id','=',pdt_create]]], {})
+    search_pdt=search_pdt[0]
+    print("Matched id with product.template with pdt.pdt------",search_pdt)  
+    return search_pdt
+ 
+
+
+#=========================(CREATE ) method to create sale order===========================
+def sale_order_create():
+    # global sale_order
+    sale_order = models.execute_kw(db,uid,password,'sale.order','create',[{'name':'Samsung TV','partner_id':35}],{})
+    print("Sale Order ID--------=",sale_order)
+    return sale_order
+    
+    
+
+#=========================(CREATE) method to sale.order.line=================================
+def sale_order_line_created(sale_order,search_pdt):
+    
+    sale_order_line = models.execute_kw(db,uid,password,'sale.order.line','create',[{  'order_id':sale_order,
+                                                                                    'product_id':search_pdt  ,
+                                                                                    'product_template_id':679,
+                                                                                    'name':'webkul soo12',
+                                                                                    'product_uom_qty':5.0,
+                                                                                    'price_unit':2500.0,
+                                                                                    'product_uom': 1,
+                                                                                    'tax_id':[(6,0,[2])]  }]  ,{})
+    print("Sale order line created -------------------",sale_order_line)
+    return sale_order_line
+
+    
+   
+
+#=========================(BUTTON ACTION) method to call button for confirm sales order=================================
+def confirm_sale_order(sale_order):
+    confirm_s_order = models.execute_kw(db,uid,password,'sale.order','action_confirm',[[sale_order]],{})
+    print("Confirm sale order through button action created -------------------",confirm_s_order)
+    return confirm_s_order
+    
+    
+
+#===========================(DELIVERY VALIDATE(search id of stock picking model realted to sale order)) validate delivery against sale order====================================== 
+def stock_picking_id(sale_order):
+    # global search_stock_pik_id
+    search_stock_pik_id = models.execute_kw(db, uid, password,'stock.picking','search',[[['sale_id','=',sale_order]]],{})
+    search_stock_pik_id = search_stock_pik_id[0]
+    print("Print the stock picking id linked to sale order---------",search_stock_pik_id)
+    return search_stock_pik_id
+  
+
+#================================(SEARCH) method to search the stockmove id's linked to the stock.picking model=======================
+def stock_move_id(search_stock_pik_id):
+    quantity_done = models.execute_kw(db, uid, password,'stock.move','search',[[['picking_id','=',search_stock_pik_id]]],{})
+    quantity_done = quantity_done[0]
+    print("IDS of all stock move linked to stock picking model ==============",quantity_done)
+    return quantity_done
+   
+   
+#============================(WRITE)method to increaase the quantity_done which should not be equal to zero==============
+def quantity_update(quantity_done): 
+    update_quantity = models.execute_kw(db, uid, password,'stock.move','write',[quantity_done,{'quantity_done':5.0}])
+    print("Quanitities is increased not equal to zero ==============",update_quantity)
+    return update_quantity
+    
+
+#===============================(VALIDATE_DELIVERY)method when click confirm button state should be DONE====================
+def validatation_delivery(search_stock_pik_id):
+    validate_delivery = models.execute_kw(db, uid, password,'stock.picking','button_validate',[[search_stock_pik_id]],{})
+    print("Validate delivery through button validate created -------------------",validate_delivery)
+    return validatation_delivery
+   
+
+
+
+#===============================(CREATE)methdo to create invoice wizard=============================================
+def wizard_creation():
+    wiz_invoice = models.execute_kw(db, uid, password,'sale.advance.payment.inv','create',[{'advance_payment_method':'delivered','deduct_down_payments':5.0}],{})
+    print("Invoice wizard is created ---------------------------------",wiz_invoice)
+    return wiz_invoice
+    
+
+
+#===============================invoice context=========================================
+def invoice_creation(wiz_invoice,sale_order):
+    create_invoice = models.execute_kw(db, uid, password,'sale.advance.payment.inv','create_invoices',[[wiz_invoice]],{'context' :{'active_ids': sale_order,'open_invoices': False}})
+    print("This invoice is generated against the sale order and get the active ids==================",create_invoice)
+    return create_invoice
+   
+
+
+#=========================READ INVOICE ID (account.move)-for further process-------------------------------------------------------
+def read_invoice_ids(sale_order):
+    invoice_id = models.execute_kw(db, uid, password,'sale.order','read',[[sale_order]],{'fields': ['invoice_ids']})
+    invoice_id=invoice_id[0]['invoice_ids']
+    invoice_id=invoice_id[0]
+    print("the invoice_ids field========================",invoice_id )
+    return invoice_id
+    
+
+
+#============================confirm invoice for state changed to posted from draft============================
+def confirm_account_move(invoice_id):
+    invoice_confirm = models.execute_kw(db, uid, password,'account.move','action_post',[[invoice_id]],{})
+    print("When invoice confirm ========================",invoice_confirm )
+    return invoice_confirm
+   
+
+#============================(CREATE) wizard for payment register===========================
+def payment_wizard_create(invoice_id):
+    payment_wiz = models.execute_kw(db, uid, password,'account.payment.register','create',[{'journal_id':7}],{'context':{'active_ids':invoice_id,'active_model': 'account.move',}})
+    print('Id of payment registered wizard-------------------------',payment_wiz)
+    return payment_wiz
+   
+
+#=========================(ACTION CALL FOR PAYMENT REGISTERED)-----================================
+def payment_register(payment_wiz,invoice_id):
+    payment=models.execute_kw(db, uid, password, 'account.payment.register', 'action_create_payments', [payment_wiz], {'context': {"active_ids": [invoice_id]}})
+    print("Payment registered successfully against the sale order-------------",payment)
+    return payment
+    
+
+pid  = product_create()
+search_pdt_pdt = product_search(pid)
+sale_o=sale_order_create()
+sale_o_line_create = sale_order_line_created(sale_o,search_pdt_pdt) 
+confirm_sale_o = confirm_sale_order(sale_o)
+search_stk_pk_id = stock_picking_id(sale_o)
+stk_move_id = stock_move_id(search_stk_pk_id)
+qty_update = quantity_update(stk_move_id)
+validate_del = validatation_delivery(search_stk_pk_id)
+wiz_create = wizard_creation()
+invoice_registered= invoice_creation(wiz_create,sale_o)
+read_inv_id = read_invoice_ids(sale_o)
+confirm_invoice = confirm_account_move(read_inv_id)
+pymnt_wiz_create=payment_wizard_create(read_inv_id)
+register_payment = payment_register(pymnt_wiz_create,read_inv_id )

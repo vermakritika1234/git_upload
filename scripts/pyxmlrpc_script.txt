@@ -1,0 +1,193 @@
+url = "http://192.168.5.36:8015"
+db = "sale_note_1"
+username = 'admin'
+password = 'admin'
+
+import xmlrpc.client
+
+common = xmlrpc.client.ServerProxy('{}/xmlrpc/2/common'.format(url))
+version = common.version()
+print('common version---',version)
+
+#USER AUTHENTICATION---
+uid = common.authenticate(db,username,password,{})
+print("USER ID--------=",uid)
+
+#OBJECT FORMAT------------
+models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(url))
+
+#------------------------Now we are ready to execute are queries---------------
+
+#=========================(SEARCH_COUNT) method used to count the product)=================
+pdt_qty = models.execute_kw(db, uid, password,'product.product','search_count',[[]],{})
+print('pdt_qty--------=',pdt_qty)
+
+
+#=========================( CREATE ) method to create new product===========================
+# pdt_create = models.execute_kw(db,uid,password,'product.template','create',[{'name':'Samsung TV','detailed_type':'product','invoice_policy':'order','list_price':200.0}],{})
+pdt_create = 700
+print("Product created -------------------",pdt_create)
+
+
+#=========================(SEARCH) method to search product.product ==========================
+# search_pdt = models.execute_kw(db,uid,password,'product.product', 'search',[[['product_tmpl_id','=',pdt_create]]], {})
+search_pdt = 711
+# search_pdt=search_pdt[0]
+print("Matched id with product.template with pdt.pdt------",search_pdt)
+
+
+
+#=========================(CREATE ) method to create sale order===========================
+# sale_order = models.execute_kw(db,uid,password,'sale.order','create',[{'name':'Samsung TV','partner_id':35}],{})
+sale_order = 430
+print("Sale order created -------------------",sale_order)
+search_read = models.execute_kw(db,uid,password,'sale.order','search_read',[[]],{'fields': ['name']})
+# print("=============",search_read)
+# print("lets print the name of the sale order name===================",search_read[0]['name'])
+
+#=========================(CREATE ) method to create TAX id =================================
+# tax_id = models.execute_kw(db,uid,password,'account.tax','create',[{ 'name':'asus tax id',
+#                                                                        'type_tax_use':'sale',
+#                                                                        'amount_type':'percent',
+#                                                                        'company_id':2}],{})
+tax_id=2
+print("Tax id created -------------------",tax_id)
+
+#=========================(CREATE) method to sale.order.line=================================
+# sale_order_line = models.execute_kw(db,uid,password,'sale.order.line','create',[{  'order_id':sale_order,
+#                                                                                     'product_id':search_pdt  ,
+#                                                                                     'product_template_id':679,
+#                                                                                     'name':'Samsung TV',
+#                                                                                     'product_uom_qty':5.0,
+#                                                                                     'price_unit':2500.0,
+#                                                                                     'product_uom': 1,
+#                                                                                     'tax_id':[(6,0,[2])]  }]  ,{})
+sale_order_line = 797
+tax = models.execute_kw(db,uid,password,'sale.order.line','read',[[sale_order_line]],{'fields':['tax_id']})
+print("===========================",tax)
+print("Sale order line created -------------------",sale_order_line)
+
+
+#=========================(BUTTON ACTION) method to call button for confirm sales order=================================
+confirm_sale_order = models.execute_kw(db,uid,password,'sale.order','action_confirm',[[sale_order]],{})
+print("Confirm sale order through button action created -------------------",confirm_sale_order)
+
+
+#===========================(DELIVERY VALIDATE(search id of stock picking model realted to sale order)) validate delivery against sale order======================================
+search_stock_pik_id = models.execute_kw(db, uid, password,'stock.picking','search',[[['sale_id','=',sale_order]]],{})
+# search_stock_pik_id=338
+search_stock_pik_id = search_stock_pik_id[0]
+print("Print the stock picking id linked to sale order---------",search_stock_pik_id)
+
+#================================(SEARCH) method to search the stockmove id's linked to the stock.picking model=======================
+quantity_done = models.execute_kw(db, uid, password,'stock.move','search',[[['picking_id','=',search_stock_pik_id]]],{})
+print("IDS of all stock move linked to stock picking model ==============",quantity_done)
+
+
+#============================(WRITE)method to increaase the quantity_done which should not be equal to zero==============
+update_quantity = models.execute_kw(db, uid, password,'stock.move','write',[quantity_done,{'quantity_done':5.0}])
+print("Quanitities is increased not equal to zero ==============",update_quantity)
+
+#===============================(VALIDATE_DELIVERY)method when click confirm button state should be DONE====================
+# validate_delivery = models.execute_kw(db, uid, password,'stock.picking','button_validate',[[search_stock_pik_id]],{})
+# print("Validate delivery through button validate created -------------------",validate_delivery)
+
+
+#===============================(CREATE)methdo to create invoice wizard=============================================
+wiz_invoice = models.execute_kw(db, uid, password,'sale.advance.payment.inv','create',[{'advance_payment_method':'delivered','deduct_down_payments':5.0}],{})
+# wiz_invoice = 34
+print("Invoice wizard created -------------------",wiz_invoice) 
+
+
+
+# invoice_sale = models.execute_kw(db, uid, password,'sale.order','read',[[sale_order]],{'context' :{'active_ids':wiz_invoice}} )
+# print("Invoice sale order created -------------------",invoice_sale)
+
+
+
+# journal = models.execute_kw(db, uid, password,'account.journal','read',[[4]],{})
+# print("========================================",journal)
+
+#============================(INVOICE)method to create invoice ============== DONE====================
+# create_invoice = models.execute_kw(db, uid, password,'account.move','create',[{'name':search_read[0]['name'],'partner_id':35,'move_type':'out_invoice'}],{})
+# create_invoice = 448
+# print("print the id of CREATED invoice-----------",create_invoice)
+
+# for i in quantity_done:
+#     print("the stock moves id================",i)
+
+#     invoice_data_search = models.execute_kw(db, uid, password,'stock.move','read',[[i]],{})
+    # print("print the invoice_stock_move data fields to fill invoice account.move.line------------",invoice_data_search[0]['name'])
+
+    #=======================================(create)INSERTED DATA OF INVOICE IN ACCOUNT.MOVE FROM ACCOUNT.MOVE.LINE========================
+    
+    # create_invoice_lines = models.execute_kw(db,uid, password,'account.move.line','create',[{'move_id':create_invoice,
+    #                                                                                             'product_id':search_pdt,
+    #                                                                                              'name':invoice_data_search[0]['name'],
+    #                                                                                               'quantity':invoice_data_search[0]['product_uom_qty'],
+    #                                                                                               'price_unit':invoice_data_search[0]['price_unit'],
+    #                                                                                               'tax_ids':[(6,0,[2])],
+    #                                                                                               'currency_id':4 ,
+    #                                                                                               'account_id':3 ,
+    #                                                                                               'debit':0.0,
+    #                                                                                               'credit':0.0,
+    #                                                                                               'journal_id':4 }],{}) 
+    # create_invoice_lines=867
+    # print("print the ids linked from acconnt.move.line to account.move-------",create_invoice_lines)
+
+
+
+#=======================================IRRELEVANT=========================(LINKED IDS OF INVOICE AND SALE.ORDER)================================================================
+# invoice = models.execute_kw(db, uid, password,'sale.order','search',[[sale_order]],{'context' :{'fields':'active_ids'}})
+# inv_sale_order = models.execute_kw(db, uid, password,'sale.order','write', [[sale_order], {'invoice_ids':[(6,0,[448])]} ])
+# print("the invoice_ids field========================",inv_sale_order )
+
+# search = models.execute_kw(db, uid, password,'sale.order','read',[[sale_order]],{'fields': ['invoice_ids']})
+# print("the invoice_ids field========================",search )
+
+
+
+#===============================invoice context=========================================
+
+# create_invoice = models.execute_kw(db, uid, password,'sale.advance.payment.inv','create_invoices',[[wiz_invoice]],{'context' :{'active_ids': sale_order,'open_invoices': False}})
+
+# print("this is wizard invoice---------------------------------",create_invoice)
+
+
+
+
+search = models.execute_kw(db, uid, password,'sale.order','read',[[sale_order]],{'fields': ['invoice_ids']})
+search=search[0]['invoice_ids']
+invoice_id=search[0]
+print("the invoice_ids field========================",invoice_id )
+
+search_price = models.execute_kw(db, uid, password,'account.move','read',[[invoice_id]],{'fields': ['amount_residual']})
+search_price=search_price[0]['amount_residual']
+print("print the price of subtotal ==",search_price)
+
+#============================confirm invoice for state changed to posted from draft============================
+
+# invoice_confirm = models.execute_kw(db, uid, password,'account.move','action_post',[invoice_id],{})
+# print("When invoice confirm ========================",invoice_confirm )
+
+#===========================================ACCOUNT>JOURNAL created for payment register===================================
+# create_journal = models.execute_kw(db, uid, password,'account.payment','create',[{'amount': 32, 
+#                                                             'payment_date': '2018-12-25 00:00:01', 
+#                                                             'payment_type': 'inbound', 
+#                                                             'payment_method_id': 2,
+#                                                              'journal_id': 8, 
+#                                                              'currency_id': 1, 
+#                                                              'partner_id': 35}] ,{})
+# print("create invoice wizard for payment register =================",create_journal)
+
+#===============================REGISTER PAYMENT=========================================
+
+line_ids = models.execute_kw(db, uid, password,'account.move.line','read',[[invoice_id]],{})
+print('line ids=================',line_ids)
+
+# payment_register = models.execute_kw(db, uid, password,'account.move','action_register_payment',[[invoice_id]],{'context' :{'journal_id':4,'amount':search_price}})
+# print("Payment generated against sale order ========================",payment_register)
+
+create_journal = models.execute_kw(db, uid, password,'account.payment.register','action_create_payments',[[invoice_id]],{'context':{'active_ids':invoice_id,'line_ids':line_ids,'company_id':2}})
+
+print('create journal==================',create_journal)
